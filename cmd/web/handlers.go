@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"leapconsulting.be/snippetbox/pkg/models"
 	"net/http"
 	"strconv"
@@ -20,30 +19,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	data := &templateData{Snippets: s}
 
-	for _, snippet := range s {
-		fmt.Fprintf(w, "%v\n", snippet)
-	}
-
-	//files := []string{
-	//	"./ui/html/home.page.tmpl",
-	//	"./ui/html/base.layout.tmpl",
-	//	"./ui/html/footer.partial.tmpl",
-	//}
-	//
-	//w.Header().Set("Content-Type", "text/html")
-	//ts, err := template.ParseFiles(files...)
-	//if err != nil {
-	//	app.errorLog.Println(err.Error())
-	//	app.serverError(w, err)
-	//	return
-	//}
-	//
-	//err = ts.Execute(w, nil)
-	//if err != nil {
-	//	app.errorLog.Println(err.Error())
-	//	app.serverError(w, err)
-	//}
+	app.render(w, r, "home.page.tmpl", data)
 }
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -62,25 +40,9 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/show.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
+	data := &templateData{Snippet: s}
 
-	w.Header().Set("Content-Type", "text/html")
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.Execute(w, s)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		app.serverError(w, err)
-	}
+	app.render(w, r, "show.page.tmpl", data)
 }
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
