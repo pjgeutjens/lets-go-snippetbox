@@ -34,7 +34,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	// http.ResponseWriter. If there's an error, call our serverError helper and then
 	// return.
 	w.Header().Set("Content-Type", "text/html")
-	err := ts.Execute(buf, td)
+	err := ts.Execute(buf, app.addDefaultData(td, r))
 	if err != nil {
 		app.serverError(w, err)
 		return
