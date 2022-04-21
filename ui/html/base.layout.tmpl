@@ -18,6 +18,9 @@
             <a href='/'>Home</a>
             <a href='/snippet/create'>Create snippet</a>
         </nav>
+        {{with .Flash}}
+            <div class='flash'>{{.}}</div>
+        {{end}}
         <main>
             {{template "main" .}}
         </main>

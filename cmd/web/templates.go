@@ -2,6 +2,7 @@ package main
 
 import (
 	"html/template"
+	"leapconsulting.be/snippetbox/pkg/forms"
 	"leapconsulting.be/snippetbox/pkg/models"
 	"path/filepath"
 	"time"
@@ -12,6 +13,8 @@ import (
 // starts out only containing a single field
 type templateData struct {
 	CurrentYear int
+	Flash       string
+	Form        *forms.Form
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
 }
