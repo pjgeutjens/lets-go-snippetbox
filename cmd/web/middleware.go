@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/justinas/nosurf"
+	"leapconsulting.be/snippetbox/pkg/models"
 	"net/http"
 )
 
@@ -46,6 +49,37 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		}
 		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
+	})
+}
+
+// add authentication info to the request, if we DON'T have an authenticated and active user
+// we pass the request up the chain unchanged, when we DO have an authenticated active user
+// we update the request context and call next with the updated context
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check if the authenticatedUserID value exists in the session, if this *is not
+		// the case* call the next handler in the chain as normal
+		exists := app.session.Exists(r, "authenticatedUserID")
+		if !exists {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		user, err := app.users.Get(app.session.GetInt(r, "authenticatedUserID"))
+		if errors.Is(err, models.ErrNoRecord) || !user.Active {
+			app.session.Remove(r, "authenticatedUserID")
+			next.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		// at this point the user is active and authenticated, so we create a new copy
+		// of the request and set the contextKeyIsAuthenticated to true in the context
+		// then call the next handler using the new context
+		ctx := context.WithValue(r.Context(), contextKeyIsAuthenticated, true)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
